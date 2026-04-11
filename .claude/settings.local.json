@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mv /Users/geminiwen/Code/kanban/.mcp.json /tmp/_mcp.json)",
+      "Bash(mv /Users/geminiwen/Code/kanban/docker-compose.yml /tmp/_docker-compose.yml)",
+      "Bash(mv /Users/geminiwen/Code/kanban/.gitignore /tmp/_gitignore)"
+    ]
+  }
+}
