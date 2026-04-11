@@ -9,7 +9,17 @@ export function useWebSocket(onMessage: (msg: WsMessage) => void) {
   onMessageRef.current = onMessage
 
   const connect = useCallback(() => {
-    const ws = new WebSocket(`ws://${window.location.hostname}:3001`)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const wsPort = process.env.NODE_ENV === 'development' ? ':3001' : ''
+    const wsPath = process.env.NODE_ENV === 'development' ? '' : '/ws'
+    const url = `${protocol}//${window.location.hostname}${wsPort}${wsPath}`
+
+    let ws: WebSocket
+    try {
+      ws = new WebSocket(url)
+    } catch {
+      return
+    }
 
     ws.onmessage = (e) => {
       try {
@@ -20,6 +30,10 @@ export function useWebSocket(onMessage: (msg: WsMessage) => void) {
 
     ws.onclose = () => {
       setTimeout(() => { if (wsRef.current === ws) connect() }, 2000)
+    }
+
+    ws.onerror = () => {
+      ws.close()
     }
 
     wsRef.current = ws
