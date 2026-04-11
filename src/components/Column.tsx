@@ -62,7 +62,11 @@ export function Column({ column }: ColumnProps) {
 
       <div ref={setNodeRef} className={`flex-1 overflow-y-auto min-h-[40px] rounded transition-colors ${isOver ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}>
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-          {column.cards.map((card) => <CardItem key={card.id} card={card} />)}
+          {column.cards.length === 0 ? (
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-6">No cards yet</p>
+          ) : (
+            column.cards.map((card) => <CardItem key={card.id} card={card} />)
+          )}
         </SortableContext>
       </div>
 
