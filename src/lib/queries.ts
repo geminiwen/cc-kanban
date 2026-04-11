@@ -62,12 +62,20 @@ export async function createColumn(boardId: string, title: string): Promise<Colu
   return rows[0] as Column
 }
 
-export async function renameColumn(id: string, title: string): Promise<Column> {
-  const [result] = await pool.query<ResultSetHeader>(
-    'UPDATE `columns` SET title = ? WHERE id = ?', [title, id]
-  )
-  if (result.affectedRows === 0) throw new Error(`Column ${id} not found`)
+export async function updateColumn(id: string, input: { title?: string; description?: string }): Promise<Column> {
+  const sets: string[] = []
+  const values: unknown[] = []
+  if (input.title !== undefined) { sets.push('title = ?'); values.push(input.title) }
+  if (input.description !== undefined) { sets.push('description = ?'); values.push(input.description) }
+  if (sets.length > 0) {
+    values.push(id)
+    const [result] = await pool.query<ResultSetHeader>(
+      `UPDATE \`columns\` SET ${sets.join(', ')} WHERE id = ?`, values
+    )
+    if (result.affectedRows === 0) throw new Error(`Column ${id} not found`)
+  }
   const [rows] = await pool.query<RowDataPacket[]>('SELECT * FROM `columns` WHERE id = ?', [id])
+  if (rows.length === 0) throw new Error(`Column ${id} not found`)
   return rows[0] as Column
 }
 

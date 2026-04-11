@@ -57,7 +57,7 @@ export function useBoard(boardId: string | null) {
         }
         case 'column:renamed': {
           const col = data as Column
-          return { ...prev, columns: prev.columns.map((c) => c.id === col.id ? { ...c, title: col.title } : c) }
+          return { ...prev, columns: prev.columns.map((c) => c.id === col.id ? { ...c, title: col.title, description: col.description } : c) }
         }
         case 'column:deleted': {
           const { id } = data as { id: string }

@@ -32,9 +32,9 @@ export async function createColumnAction(boardId: string, title: string): Promis
   return col
 }
 
-export async function renameColumnAction(id: string, title: string): Promise<Column> {
+export async function updateColumnAction(id: string, input: { title?: string; description?: string }): Promise<Column> {
   await ensureDb()
-  const col = await queries.renameColumn(id, title)
+  const col = await queries.updateColumn(id, input)
   broadcast({ event: Events.COLUMN_RENAMED, data: col })
   return col
 }

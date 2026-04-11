@@ -27,7 +27,7 @@ export function createMcpServer(): Server {
       { name: 'get_board', description: 'Get a board with all its columns and cards', inputSchema: { type: 'object' as const, properties: { board_id: { type: 'string', description: 'Board UUID' } }, required: ['board_id'] } },
       { name: 'create_board', description: 'Create a new kanban board', inputSchema: { type: 'object' as const, properties: { title: { type: 'string' }, description: { type: 'string' } }, required: ['title'] } },
       { name: 'create_column', description: 'Add a column to a board', inputSchema: { type: 'object' as const, properties: { board_id: { type: 'string' }, title: { type: 'string' } }, required: ['board_id', 'title'] } },
-      { name: 'rename_column', description: 'Rename a column', inputSchema: { type: 'object' as const, properties: { column_id: { type: 'string' }, title: { type: 'string' } }, required: ['column_id', 'title'] } },
+      { name: 'update_column', description: 'Update a column title and/or description', inputSchema: { type: 'object' as const, properties: { column_id: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' } }, required: ['column_id'] } },
       { name: 'delete_column', description: 'Delete a column and all its cards', inputSchema: { type: 'object' as const, properties: { column_id: { type: 'string' } }, required: ['column_id'] } },
       { name: 'create_card', description: 'Create a new card in a column', inputSchema: { type: 'object' as const, properties: { column_id: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, due_date: { type: 'string' } }, required: ['column_id', 'title'] } },
       { name: 'update_card', description: 'Update card fields', inputSchema: { type: 'object' as const, properties: { card_id: { type: 'string' }, title: { type: 'string' }, description: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, due_date: { type: 'string' } }, required: ['card_id'] } },
@@ -59,8 +59,8 @@ export function createMcpServer(): Server {
           broadcast({ event: Events.COLUMN_CREATED, data: col })
           return ok(col)
         }
-        case 'rename_column': {
-          const col = await queries.renameColumn(a.column_id as string, a.title as string)
+        case 'update_column': {
+          const col = await queries.updateColumn(a.column_id as string, { title: a.title as string | undefined, description: a.description as string | undefined })
           broadcast({ event: Events.COLUMN_RENAMED, data: col })
           return ok(col)
         }

@@ -7,8 +7,8 @@ import { Events } from '@/lib/types'
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   await ensureDb()
   const { id } = await params
-  const { title } = await req.json()
-  const col = await queries.renameColumn(id, title)
+  const body = await req.json()
+  const col = await queries.updateColumn(id, body)
   broadcast({ event: Events.COLUMN_RENAMED, data: col })
   return NextResponse.json(col)
 }

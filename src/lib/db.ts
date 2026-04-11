@@ -24,6 +24,7 @@ export async function runMigrations() {
         id          CHAR(36) PRIMARY KEY DEFAULT (UUID()),
         board_id    CHAR(36) NOT NULL,
         title       VARCHAR(255) NOT NULL,
+        description TEXT,
         position    INT NOT NULL,
         created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -47,4 +48,5 @@ export async function runMigrations() {
         INDEX idx_cards_column_id (column_id)
     )
   `)
+
 }
