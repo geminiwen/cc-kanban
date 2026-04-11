@@ -74,8 +74,8 @@ export function Board({ board }: BoardProps) {
       </div>
       <DragOverlay>
         {activeCard ? (
-          <div className="bg-white rounded-lg shadow-lg border border-blue-300 p-3 w-72 opacity-90">
-            <p className="text-sm text-gray-800">{activeCard.title}</p>
+          <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-blue-300 dark:border-blue-500 p-3 w-72 opacity-90">
+            <p className="text-sm text-gray-800 dark:text-gray-100">{activeCard.title}</p>
           </div>
         ) : null}
       </DragOverlay>

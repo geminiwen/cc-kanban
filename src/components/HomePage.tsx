@@ -12,7 +12,7 @@ export function HomePage() {
 
   if (!selectedBoardId) {
     return (
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
         <Header />
         <BoardList onSelect={setSelectedBoardId} />
       </div>
@@ -20,7 +20,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100">
+    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
       <Header boardTitle={board?.title} onBack={() => setSelectedBoardId(null)} />
       {loading ? (
         <div className="flex-1 flex items-center justify-center text-gray-500">Loading...</div>

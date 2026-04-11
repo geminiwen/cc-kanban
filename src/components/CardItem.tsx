@@ -12,10 +12,10 @@ interface CardItemProps {
 }
 
 const LABEL_COLORS: Record<string, string> = {
-  bug: 'bg-red-200 text-red-800',
-  feature: 'bg-blue-200 text-blue-800',
-  urgent: 'bg-orange-200 text-orange-800',
-  done: 'bg-green-200 text-green-800',
+  bug: 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200',
+  feature: 'bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  urgent: 'bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+  done: 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200',
 }
 
 export function CardItem({ card }: CardItemProps) {
@@ -50,12 +50,10 @@ export function CardItem({ card }: CardItemProps) {
     if (clickTimer.current) {
       clearTimeout(clickTimer.current)
       clickTimer.current = null
-      // Double click → edit
       setIsEditing(true)
     } else {
       clickTimer.current = setTimeout(() => {
         clickTimer.current = null
-        // Single click → modal
         setShowModal(true)
       }, 250)
     }
@@ -69,14 +67,14 @@ export function CardItem({ card }: CardItemProps) {
         {...attributes}
         {...listeners}
         onClick={handleClick}
-        className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow ${
-          isDragging ? 'shadow-lg ring-2 ring-blue-300' : ''
+        className={`bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow ${
+          isDragging ? 'shadow-lg ring-2 ring-blue-300 dark:ring-blue-500' : ''
         }`}
       >
         {card.labels.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {card.labels.map((label) => (
-              <span key={label} className={`text-xs px-2 py-0.5 rounded-full ${LABEL_COLORS[label.toLowerCase()] ?? 'bg-gray-200 text-gray-700'}`}>
+              <span key={label} className={`text-xs px-2 py-0.5 rounded-full ${LABEL_COLORS[label.toLowerCase()] ?? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'}`}>
                 {label}
               </span>
             ))}
@@ -93,13 +91,13 @@ export function CardItem({ card }: CardItemProps) {
               if (e.key === 'Escape') { setTitle(card.title); setIsEditing(false) }
             }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full text-sm bg-white border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-gray-100 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         ) : (
-          <p className="text-sm text-gray-800">{card.title}</p>
+          <p className="text-sm text-gray-800 dark:text-gray-100">{card.title}</p>
         )}
         {card.due_date && (
-          <p className="text-xs text-gray-500 mt-1">Due: {new Date(card.due_date).toLocaleDateString()}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Due: {new Date(card.due_date).toLocaleDateString()}</p>
         )}
       </div>
       {showModal && <CardModal card={card} onClose={() => setShowModal(false)} />}

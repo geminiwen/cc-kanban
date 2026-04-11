@@ -38,7 +38,7 @@ export function Column({ column }: ColumnProps) {
   const cardIds = column.cards.map((c) => c.id)
 
   return (
-    <div className="flex-shrink-0 w-72 bg-gray-50 rounded-lg p-3 flex flex-col max-h-full">
+    <div className="flex-shrink-0 w-72 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 flex flex-col max-h-full">
       <div className="flex items-center justify-between mb-3">
         {isEditing ? (
           <input
@@ -49,18 +49,18 @@ export function Column({ column }: ColumnProps) {
               if (e.key === 'Enter') handleRename()
               if (e.key === 'Escape') { setTitle(column.title); setIsEditing(false) }
             }}
-            className="text-sm font-semibold bg-white border border-gray-300 rounded px-2 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="text-sm font-semibold bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded px-2 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         ) : (
-          <h3 className="text-sm font-semibold text-gray-700 cursor-pointer" onDoubleClick={() => setIsEditing(true)}>
+          <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 cursor-pointer" onDoubleClick={() => setIsEditing(true)}>
             {column.title}
-            <span className="ml-2 text-gray-400 font-normal">{column.cards.length}</span>
+            <span className="ml-2 text-gray-400 dark:text-gray-500 font-normal">{column.cards.length}</span>
           </h3>
         )}
-        <button onClick={handleDelete} className="text-gray-400 hover:text-red-500 text-sm ml-2 cursor-pointer" title="Delete column">&times;</button>
+        <button onClick={handleDelete} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 text-sm ml-2 cursor-pointer" title="Delete column">&times;</button>
       </div>
 
-      <div ref={setNodeRef} className={`flex-1 overflow-y-auto min-h-[40px] rounded transition-colors ${isOver ? 'bg-blue-50' : ''}`}>
+      <div ref={setNodeRef} className={`flex-1 overflow-y-auto min-h-[40px] rounded transition-colors ${isOver ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}>
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           {column.cards.map((card) => <CardItem key={card.id} card={card} />)}
         </SortableContext>
