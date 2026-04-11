@@ -1,74 +1,50 @@
-import pg from 'pg'
+import mysql from 'mysql2/promise'
 
-const { Pool } = pg
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL ?? 'postgresql://kanban:kanban@localhost:5432/kanban',
+const pool = mysql.createPool({
+  uri: process.env.DATABASE_URL ?? 'mysql://geminiwen:silentlove0449!@rm-bp16794mvudl80p3o.mysql.rds.aliyuncs.com:3306/kanban',
+  waitForConnections: true,
+  connectionLimit: 10,
 })
 
 export default pool
 
 export async function runMigrations() {
   await pool.query(`
-    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
     CREATE TABLE IF NOT EXISTS boards (
-        id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        id          CHAR(36) PRIMARY KEY DEFAULT (UUID()),
         title       VARCHAR(255) NOT NULL,
         description TEXT,
-        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+        created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `)
 
-    CREATE TABLE IF NOT EXISTS columns (
-        id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        board_id    UUID NOT NULL REFERENCES boards(id) ON DELETE CASCADE,
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS \`columns\` (
+        id          CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        board_id    CHAR(36) NOT NULL,
         title       VARCHAR(255) NOT NULL,
-        position    INTEGER NOT NULL,
-        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
+        position    INT NOT NULL,
+        created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (board_id) REFERENCES boards(id) ON DELETE CASCADE,
+        INDEX idx_columns_board_id (board_id)
+    )
+  `)
 
-    CREATE INDEX IF NOT EXISTS idx_columns_board_id ON columns(board_id);
-
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS cards (
-        id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        column_id   UUID NOT NULL REFERENCES columns(id) ON DELETE CASCADE,
+        id          CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        column_id   CHAR(36) NOT NULL,
         title       VARCHAR(255) NOT NULL,
         description TEXT,
-        position    INTEGER NOT NULL,
-        labels      TEXT[] DEFAULT '{}',
-        due_date    TIMESTAMPTZ,
-        created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_cards_column_id ON cards(column_id);
-
-    CREATE OR REPLACE FUNCTION update_updated_at()
-    RETURNS TRIGGER AS $$
-    BEGIN
-        NEW.updated_at = NOW();
-        RETURN NEW;
-    END;
-    $$ LANGUAGE plpgsql;
-
-    DO $$ BEGIN
-        CREATE TRIGGER boards_updated_at BEFORE UPDATE ON boards
-            FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
-
-    DO $$ BEGIN
-        CREATE TRIGGER columns_updated_at BEFORE UPDATE ON columns
-            FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
-
-    DO $$ BEGIN
-        CREATE TRIGGER cards_updated_at BEFORE UPDATE ON cards
-            FOR EACH ROW EXECUTE FUNCTION update_updated_at();
-    EXCEPTION WHEN duplicate_object THEN NULL;
-    END $$;
+        position    INT NOT NULL,
+        labels      JSON DEFAULT ('[]'),
+        due_date    TIMESTAMP NULL,
+        created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (column_id) REFERENCES \`columns\`(id) ON DELETE CASCADE,
+        INDEX idx_cards_column_id (column_id)
+    )
   `)
 }

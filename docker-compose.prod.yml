@@ -1,9 +1,9 @@
 services:
   app:
-    build: .
+    image: ghcr.io/geminiwen/cc-kanban:latest
     ports:
-      - "3000:3000"
-      - "3001:3001"
+      - "3100:3000"
+      - "3101:3001"
     environment:
       DATABASE_URL: "mysql://geminiwen:silentlove0449!@rm-bp16794mvudl80p3o.mysql.rds.aliyuncs.com:3306/kanban"
       WS_PORT: "3001"
