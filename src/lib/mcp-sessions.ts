@@ -1,34 +1,23 @@
 import type { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import type { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
+import type { AppContext } from '../../server'
 
-const g = globalThis as unknown as { __mcpSessions?: Map<string, Server> }
-
-function getSessions(): Map<string, Server> {
-  if (!g.__mcpSessions) {
-    g.__mcpSessions = new Map()
-  }
-  return g.__mcpSessions
+function getCtx(): AppContext {
+  return (globalThis as any).__appCtx
 }
 
-export function registerSession(id: string, server: Server) {
-  getSessions().set(id, server)
+export function registerSession(id: string, transport: WebStandardStreamableHTTPServerTransport, server: Server) {
+  getCtx().registerMcpSession(id, transport, server)
 }
 
 export function unregisterSession(id: string) {
-  getSessions().delete(id)
+  getCtx().unregisterMcpSession(id)
 }
 
-export async function notifyAllSessions(event: string, data: unknown) {
-  for (const [, server] of getSessions()) {
-    try {
-      await server.notification({
-        method: 'notifications/claude/channel',
-        params: {
-          content: JSON.stringify(data),
-          meta: { event },
-        },
-      })
-    } catch {
-      // session may be closed
-    }
-  }
+export function getTransport(id: string): WebStandardStreamableHTTPServerTransport | undefined {
+  return getCtx().mcpTransports.get(id)
+}
+
+export function hasTransport(id: string): boolean {
+  return getCtx().mcpTransports.has(id)
 }

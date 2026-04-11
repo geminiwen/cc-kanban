@@ -1,9 +1,6 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { createMcpServer } from '@/mcp/channel-entry'
-import { registerSession, unregisterSession } from '@/lib/mcp-sessions'
-
-// Store transports by session ID
-const transports = new Map<string, WebStandardStreamableHTTPServerTransport>()
+import { registerSession, unregisterSession, getTransport, hasTransport } from '@/lib/mcp-sessions'
 
 async function handleMcp(req: Request): Promise<Response> {
   const sessionId = req.headers.get('mcp-session-id')
@@ -20,11 +17,9 @@ async function handleMcp(req: Request): Promise<Response> {
       const transport = new WebStandardStreamableHTTPServerTransport({
         sessionIdGenerator: () => crypto.randomUUID(),
         onsessioninitialized: (id) => {
-          transports.set(id, transport)
-          registerSession(id, server)
+          registerSession(id, transport, server)
         },
         onsessionclosed: (id) => {
-          transports.delete(id)
           unregisterSession(id)
         },
       })
@@ -34,31 +29,31 @@ async function handleMcp(req: Request): Promise<Response> {
       return transport.handleRequest(req, { parsedBody: body })
     }
 
-    if (!sessionId || !transports.has(sessionId)) {
+    if (!sessionId || !hasTransport(sessionId)) {
       return new Response(JSON.stringify({ error: 'Invalid session' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       })
     }
 
-    return transports.get(sessionId)!.handleRequest(req, { parsedBody: body })
+    return getTransport(sessionId)!.handleRequest(req, { parsedBody: body })
   }
 
   if (req.method === 'GET') {
-    if (!sessionId || !transports.has(sessionId)) {
+    if (!sessionId || !hasTransport(sessionId)) {
       return new Response(JSON.stringify({ error: 'Invalid session' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       })
     }
-    return transports.get(sessionId)!.handleRequest(req)
+    return getTransport(sessionId)!.handleRequest(req)
   }
 
   if (req.method === 'DELETE') {
-    if (!sessionId || !transports.has(sessionId)) {
+    if (!sessionId || !hasTransport(sessionId)) {
       return new Response(null, { status: 204 })
     }
-    return transports.get(sessionId)!.handleRequest(req)
+    return getTransport(sessionId)!.handleRequest(req)
   }
 
   return new Response('Method not allowed', { status: 405 })

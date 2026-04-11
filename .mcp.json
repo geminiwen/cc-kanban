@@ -2,7 +2,7 @@
   "mcpServers": {
     "kanban": {
       "type": "http",
-      "url": "http://localhost:3000/mcp"
+      "url": "https://kanban.geminiwen.com/mcp"
     }
   }
 }
