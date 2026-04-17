@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { createCardAction } from '@/lib/actions'
 
 interface AddCardProps {
@@ -11,14 +12,21 @@ export function AddCard({ columnId }: AddCardProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const titleRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = async () => {
     const trimmed = title.trim()
-    if (!trimmed) return
-    await createCardAction(columnId, { title: trimmed, description: description.trim() || undefined })
-    setTitle('')
-    setDescription('')
-    setIsOpen(false)
+    if (!trimmed || submitting) return
+    setSubmitting(true)
+    try {
+      await createCardAction(columnId, { title: trimmed, description: description.trim() || undefined })
+      setTitle('')
+      setDescription('')
+      titleRef.current?.focus()
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleCancel = () => {
@@ -31,16 +39,18 @@ export function AddCard({ columnId }: AddCardProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="w-full text-left text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-2 py-1 mt-1 cursor-pointer"
+        className="w-full inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent rounded-md px-2 py-1.5 mt-1 cursor-pointer transition-colors"
       >
-        + Add card
+        <Plus className="size-3.5" />
+        Add card
       </button>
     )
   }
 
   return (
-    <div className="mt-1">
+    <div className="mt-1 px-1">
       <input
+        ref={titleRef}
         autoFocus
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -49,7 +59,7 @@ export function AddCard({ columnId }: AddCardProps) {
           if (e.key === 'Escape') handleCancel()
         }}
         placeholder="Card title..."
-        className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full border border-input bg-background text-foreground rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <textarea
         value={description}
@@ -58,12 +68,23 @@ export function AddCard({ columnId }: AddCardProps) {
           if (e.key === 'Escape') handleCancel()
         }}
         placeholder="Description (optional)"
-        className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 mt-1"
+        className="w-full border border-input bg-background text-foreground rounded-md px-2 py-1.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring mt-1"
         rows={2}
       />
       <div className="flex gap-2 mt-1">
-        <button onClick={handleSubmit} className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600 cursor-pointer">Add</button>
-        <button onClick={handleCancel} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer">Cancel</button>
+        <button
+          onClick={handleSubmit}
+          disabled={submitting || !title.trim()}
+          className="bg-primary text-primary-foreground text-sm px-3 py-1 rounded-md hover:opacity-90 cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Add
+        </button>
+        <button
+          onClick={handleCancel}
+          className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+        >
+          Done
+        </button>
       </div>
     </div>
   )

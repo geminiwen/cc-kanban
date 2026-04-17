@@ -18,6 +18,7 @@ export interface AppContext {
 const dev = process.env.NODE_ENV !== 'production'
 const hostname = process.env.HOSTNAME ?? '0.0.0.0'
 const port = parseInt(process.env.PORT ?? '3000', 10)
+const wsPort = parseInt(process.env.WS_PORT ?? '3001', 10)
 
 const app = next({ dev, hostname, port })
 const handle = app.getRequestHandler()
@@ -28,8 +29,20 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl)
   })
 
-  // WebSocket
-  const wss = new WebSocketServer({ server, path: '/ws' })
+  // In dev (Turbopack HMR on main server), isolate business WS on its own port.
+  // In prod (no HMR), attach WS to the main server for single-port deployment.
+  let wss: WebSocketServer
+  let wsServer: ReturnType<typeof createServer> | null = null
+  if (dev) {
+    wsServer = createServer()
+    wss = new WebSocketServer({ server: wsServer, path: '/ws' })
+    const nextUpgradeHandler = app.getUpgradeHandler()
+    server.on('upgrade', (req, socket, head) => {
+      nextUpgradeHandler(req, socket, head)
+    })
+  } else {
+    wss = new WebSocketServer({ server, path: '/ws' })
+  }
   wss.on('connection', () => {
     console.log(`[ws] client connected (${wss.clients.size} total)`)
   })
@@ -111,6 +124,9 @@ app.prepare().then(() => {
 
   server.listen(port, hostname, () => {
     console.log(`> Ready on http://${hostname}:${port}`)
-    console.log(`[ws] WebSocket on ws://${hostname}:${port}/ws`)
+    if (!wsServer) console.log(`[ws] WebSocket on ws://${hostname}:${port}/ws`)
+  })
+  wsServer?.listen(wsPort, hostname, () => {
+    console.log(`[ws] WebSocket on ws://${hostname}:${wsPort}/ws`)
   })
 })

@@ -10,8 +10,9 @@ export function useWebSocket(onMessage: (msg: WsMessage) => void) {
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const wsPort = process.env.NODE_ENV === 'development' ? ':3001' : ''
-    const url = `${protocol}//${window.location.hostname}${wsPort}/ws`
+    const wsPort = process.env.NEXT_PUBLIC_WS_PORT
+    const host = wsPort ? `${window.location.hostname}:${wsPort}` : window.location.host
+    const url = `${protocol}//${host}/ws`
 
     let ws: WebSocket
     try {

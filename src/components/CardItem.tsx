@@ -9,16 +9,17 @@ import { updateCardAction } from '@/lib/actions'
 
 interface CardItemProps {
   card: Card
+  identifier?: string
 }
 
 const LABEL_COLORS: Record<string, string> = {
-  bug: 'bg-red-200 text-red-800 dark:bg-red-900 dark:text-red-200',
-  feature: 'bg-blue-200 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  urgent: 'bg-orange-200 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-  done: 'bg-green-200 text-green-800 dark:bg-green-900 dark:text-green-200',
+  bug: 'bg-red-100 text-red-700 dark:bg-red-950/60 dark:text-red-300',
+  feature: 'bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300',
+  urgent: 'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300',
+  done: 'bg-green-100 text-green-700 dark:bg-green-950/60 dark:text-green-300',
 }
 
-export function CardItem({ card }: CardItemProps) {
+export function CardItem({ card, identifier }: CardItemProps) {
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
@@ -32,7 +33,7 @@ export function CardItem({ card }: CardItemProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.3 : 1,
   }
 
   const handleRename = async () => {
@@ -67,14 +68,20 @@ export function CardItem({ card }: CardItemProps) {
         {...attributes}
         {...listeners}
         onClick={handleClick}
-        className={`bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 p-3 mb-2 cursor-pointer hover:shadow-md transition-shadow ${
-          isDragging ? 'shadow-lg ring-2 ring-blue-300 dark:ring-blue-500' : ''
-        }`}
+        className="group rounded-lg border-[0.5px] border-border bg-card py-3 px-2.5 cursor-pointer shadow-[0_3px_6px_-2px_rgba(0,0,0,0.02),0_1px_1px_0_rgba(0,0,0,0.04)] transition-shadow hover:shadow-sm"
       >
+        {identifier && (
+          <p className="text-[11px] text-muted-foreground font-mono tabular-nums mb-0.5">{identifier}</p>
+        )}
         {card.labels.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
+          <div className="flex flex-wrap gap-1 mt-1 mb-1">
             {card.labels.map((label) => (
-              <span key={label} className={`text-xs px-2 py-0.5 rounded-full ${LABEL_COLORS[label.toLowerCase()] ?? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200'}`}>
+              <span
+                key={label}
+                className={`text-[11px] px-1.5 py-0.5 rounded font-medium ${
+                  LABEL_COLORS[label.toLowerCase()] ?? 'bg-muted text-muted-foreground'
+                }`}
+              >
                 {label}
               </span>
             ))}
@@ -88,16 +95,24 @@ export function CardItem({ card }: CardItemProps) {
             onBlur={handleRename}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleRename()
-              if (e.key === 'Escape') { setTitle(card.title); setIsEditing(false) }
+              if (e.key === 'Escape') {
+                setTitle(card.title)
+                setIsEditing(false)
+              }
             }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full text-sm bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-500 text-gray-900 dark:text-gray-100 rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="w-full text-sm bg-background border border-input text-foreground rounded px-1 py-0.5 focus:outline-none focus:ring-2 focus:ring-ring"
           />
         ) : (
-          <p className="text-sm text-gray-800 dark:text-gray-100">{card.title}</p>
+          <p className="text-sm font-medium leading-snug text-foreground line-clamp-2">{card.title}</p>
+        )}
+        {card.description && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{card.description}</p>
         )}
         {card.due_date && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Due: {new Date(card.due_date).toLocaleDateString()}</p>
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Due: {new Date(card.due_date).toLocaleDateString()}
+          </p>
         )}
       </div>
       {showModal && <CardModal card={card} onClose={() => setShowModal(false)} />}

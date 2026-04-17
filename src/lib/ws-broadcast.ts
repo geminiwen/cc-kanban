@@ -1,9 +1,9 @@
 import type { AppContext } from '../../server'
 
-function getCtx(): AppContext {
-  return (globalThis as any).__appCtx
+function getCtx(): AppContext | undefined {
+  return (globalThis as unknown as { __appCtx?: AppContext }).__appCtx
 }
 
 export function broadcast(message: { event: string; data: unknown }) {
-  getCtx().broadcast(message)
+  getCtx()?.broadcast(message)
 }

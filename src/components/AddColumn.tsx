@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { createColumnAction } from '@/lib/actions'
 
 interface AddColumnProps {
@@ -10,44 +11,69 @@ interface AddColumnProps {
 export function AddColumn({ boardId }: AddColumnProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [title, setTitle] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = async () => {
     const trimmed = title.trim()
-    if (!trimmed) return
-    await createColumnAction(boardId, trimmed)
-    setTitle('')
+    if (!trimmed || submitting) return
+    setSubmitting(true)
+    try {
+      await createColumnAction(boardId, trimmed)
+      setTitle('')
+      inputRef.current?.focus()
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDone = () => {
     setIsOpen(false)
+    setTitle('')
   }
 
   if (!isOpen) {
     return (
-      <div className="flex-shrink-0 w-72">
+      <div className="flex-shrink-0 w-[280px]">
         <button
           onClick={() => setIsOpen(true)}
-          className="w-full bg-white/60 dark:bg-gray-800/60 hover:bg-white/80 dark:hover:bg-gray-800/80 rounded-lg p-3 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-left border border-dashed border-gray-300 dark:border-gray-600 cursor-pointer"
+          className="w-full inline-flex items-center gap-1.5 rounded-xl p-3 text-sm text-muted-foreground hover:text-foreground border-2 border-dashed border-border hover:border-muted-foreground/50 hover:bg-muted/40 cursor-pointer transition-colors"
         >
-          + Add column
+          <Plus className="size-4" />
+          Add column
         </button>
       </div>
     )
   }
 
   return (
-    <div className="flex-shrink-0 w-72 bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm">
+    <div className="flex-shrink-0 w-[280px] bg-muted/50 rounded-xl p-2">
       <input
+        ref={inputRef}
         autoFocus
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') handleSubmit()
-          if (e.key === 'Escape') { setIsOpen(false); setTitle('') }
+          if (e.key === 'Escape') handleDone()
         }}
         placeholder="Column title..."
-        className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="w-full border border-input bg-background text-foreground rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
       />
       <div className="flex gap-2 mt-2">
-        <button onClick={handleSubmit} className="bg-blue-500 text-white text-sm px-3 py-1 rounded hover:bg-blue-600 cursor-pointer">Add</button>
-        <button onClick={() => { setIsOpen(false); setTitle('') }} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer">Cancel</button>
+        <button
+          onClick={handleSubmit}
+          disabled={submitting || !title.trim()}
+          className="bg-primary text-primary-foreground text-sm px-3 py-1 rounded-md hover:opacity-90 cursor-pointer transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Add
+        </button>
+        <button
+          onClick={handleDone}
+          className="text-sm text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+        >
+          Done
+        </button>
       </div>
     </div>
   )

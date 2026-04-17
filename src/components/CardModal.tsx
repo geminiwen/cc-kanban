@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Trash2, X } from 'lucide-react'
 import type { Card } from '@/lib/types'
 import { updateCardAction, deleteCardAction } from '@/lib/actions'
 
@@ -26,34 +27,72 @@ export function CardModal({ card, onClose }: CardModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-popover text-popover-foreground rounded-xl shadow-2xl shadow-black/20 border border-border w-full max-w-lg p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit Card</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl cursor-pointer">&times;</button>
+          <h2 className="text-lg font-semibold tracking-tight">Edit Card</h2>
+          <button
+            onClick={onClose}
+            className="size-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-accent cursor-pointer transition-colors"
+          >
+            <X className="size-4" />
+          </button>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)}
-              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Title</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full border border-input bg-background text-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4}
-              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              className="w-full border border-input bg-background text-foreground rounded-md px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Labels (comma-separated)</label>
-            <input value={labelsStr} onChange={(e) => setLabelsStr(e.target.value)} placeholder="bug, feature, urgent"
-              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400" />
+            <label className="block text-sm font-medium text-foreground mb-1.5">Labels (comma-separated)</label>
+            <input
+              value={labelsStr}
+              onChange={(e) => setLabelsStr(e.target.value)}
+              placeholder="bug, feature, urgent"
+              className="w-full border border-input bg-background text-foreground rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
           </div>
         </div>
         <div className="flex justify-between mt-6">
-          <button onClick={handleDelete} className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm cursor-pointer">Delete card</button>
+          <button
+            onClick={handleDelete}
+            className="inline-flex items-center gap-1.5 text-destructive hover:opacity-80 text-sm cursor-pointer transition-opacity"
+          >
+            <Trash2 className="size-3.5" />
+            Delete card
+          </button>
           <div className="flex gap-2">
-            <button onClick={onClose} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-3 py-1 cursor-pointer">Cancel</button>
-            <button onClick={handleSave} className="bg-blue-500 text-white text-sm px-4 py-1 rounded hover:bg-blue-600 cursor-pointer">Save</button>
+            <button
+              onClick={onClose}
+              className="text-sm text-muted-foreground hover:text-foreground px-3 py-1 cursor-pointer transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="bg-primary text-primary-foreground text-sm px-4 py-1.5 rounded-md hover:opacity-90 cursor-pointer transition-opacity"
+            >
+              Save
+            </button>
           </div>
         </div>
       </div>
