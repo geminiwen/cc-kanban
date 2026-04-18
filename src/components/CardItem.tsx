@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { Paperclip } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Card } from '@/lib/types'
@@ -109,10 +110,33 @@ export function CardItem({ card, identifier }: CardItemProps) {
         {card.description && (
           <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{card.description}</p>
         )}
-        {card.due_date && (
-          <p className="text-xs text-muted-foreground mt-1.5">
-            Due: {new Date(card.due_date).toLocaleDateString()}
-          </p>
+        {card.attachments && card.attachments.length > 0 && (
+          <div className="mt-2 grid grid-cols-3 gap-1">
+            {card.attachments.slice(0, 3).map((a, i) => (
+              <div key={a.id} className="relative aspect-square rounded overflow-hidden bg-muted">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/uploads/${a.filename}`} alt="" className="w-full h-full object-cover" />
+                {i === 2 && card.attachments!.length > 3 && (
+                  <div className="absolute inset-0 bg-black/60 text-white text-xs font-medium flex items-center justify-center">
+                    +{card.attachments!.length - 3}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {(card.due_date || (card.attachments && card.attachments.length > 0)) && (
+          <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+            {card.attachments && card.attachments.length > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <Paperclip className="size-3" />
+                {card.attachments.length}
+              </span>
+            )}
+            {card.due_date && (
+              <span>Due {new Date(card.due_date).toLocaleDateString()}</span>
+            )}
+          </div>
         )}
       </div>
       {showModal && <CardModal card={card} onClose={() => setShowModal(false)} />}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import type { BoardWithColumns, Card, Column, WsMessage } from '@/lib/types'
+import type { Attachment, BoardWithColumns, Card, Column, WsMessage } from '@/lib/types'
 import { getBoardAction } from '@/lib/actions'
 import { useWebSocket } from './useWebSocket'
 
@@ -69,6 +69,22 @@ export function useBoard(boardId: string | null) {
             .map((col) => { const u = columns.find((c) => c.id === col.id); return u ? { ...col, position: u.position } : col })
             .sort((a, b) => a.position - b.position)
           }
+        }
+        case 'attachment:created': {
+          const att = data as Attachment
+          return { ...prev, columns: prev.columns.map((col) => ({
+            ...col, cards: col.cards.map((c) => c.id === att.card_id
+              ? { ...c, attachments: [...(c.attachments ?? []), att] }
+              : c)
+          })) }
+        }
+        case 'attachment:deleted': {
+          const { id, card_id } = data as { id: string; card_id: string }
+          return { ...prev, columns: prev.columns.map((col) => ({
+            ...col, cards: col.cards.map((c) => c.id === card_id
+              ? { ...c, attachments: (c.attachments ?? []).filter((a) => a.id !== id) }
+              : c)
+          })) }
         }
         default: return prev
       }

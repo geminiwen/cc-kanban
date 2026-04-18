@@ -26,6 +26,17 @@ export interface Card {
   due_date: string | null
   created_at: string
   updated_at: string
+  attachments?: Attachment[]
+}
+
+export interface Attachment {
+  id: string
+  card_id: string
+  filename: string
+  original_name: string | null
+  mime_type: string
+  size: number
+  created_at: string
 }
 
 export interface BoardWithColumns extends Board {
@@ -51,4 +62,6 @@ export const Events = {
   COLUMN_RENAMED: 'column:renamed',
   COLUMN_DELETED: 'column:deleted',
   COLUMNS_REORDERED: 'columns:reordered',
+  ATTACHMENT_CREATED: 'attachment:created',
+  ATTACHMENT_DELETED: 'attachment:deleted',
 } as const

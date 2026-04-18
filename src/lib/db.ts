@@ -49,4 +49,17 @@ export async function runMigrations() {
     )
   `)
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS card_attachments (
+        id            CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+        card_id       CHAR(36) NOT NULL,
+        filename      VARCHAR(255) NOT NULL,
+        original_name VARCHAR(512),
+        mime_type     VARCHAR(128) NOT NULL,
+        size          INT NOT NULL,
+        created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (card_id) REFERENCES cards(id) ON DELETE CASCADE,
+        INDEX idx_attachments_card_id (card_id)
+    )
+  `)
 }

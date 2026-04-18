@@ -1,5 +1,5 @@
 import pool from './db'
-import type { Board, BoardWithColumns, Column, ColumnWithCards, Card } from './types'
+import type { Board, BoardWithColumns, Column, ColumnWithCards, Card, Attachment } from './types'
 import type { RowDataPacket, ResultSetHeader } from 'mysql2'
 
 // --- Boards ---
@@ -20,17 +20,28 @@ export async function getBoard(id: string): Promise<BoardWithColumns | null> {
   )
 
   const columnsWithCards: ColumnWithCards[] = []
+  const allCardIds: string[] = []
+  const cardsByColumn = new Map<string, Card[]>()
+
   for (const col of columns) {
     const [cards] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM cards WHERE column_id = ? ORDER BY position',
       [col.id]
     )
-    // Parse labels JSON
     const parsedCards = (cards as Card[]).map((c) => ({
       ...c,
       labels: typeof c.labels === 'string' ? JSON.parse(c.labels) : (c.labels ?? []),
     }))
-    columnsWithCards.push({ ...(col as Column), cards: parsedCards })
+    cardsByColumn.set(col.id, parsedCards)
+    for (const c of parsedCards) allCardIds.push(c.id)
+  }
+
+  const attachmentsByCard = await getAttachmentsByCardIds(allCardIds)
+
+  for (const col of columns) {
+    const cards = cardsByColumn.get(col.id) ?? []
+    const withAttachments = cards.map((c) => ({ ...c, attachments: attachmentsByCard.get(c.id) ?? [] }))
+    columnsWithCards.push({ ...(col as Column), cards: withAttachments })
   }
 
   return { ...board, columns: columnsWithCards }
@@ -185,4 +196,72 @@ export async function moveCard(input: {
 export async function deleteCard(id: string): Promise<void> {
   const [result] = await pool.query<ResultSetHeader>('DELETE FROM cards WHERE id = ?', [id])
   if (result.affectedRows === 0) throw new Error(`Card ${id} not found`)
+}
+
+export async function getCard(id: string): Promise<Card | null> {
+  const [rows] = await pool.query<RowDataPacket[]>('SELECT * FROM cards WHERE id = ?', [id])
+  if (rows.length === 0) return null
+  const card = rows[0] as Card
+  card.labels = typeof card.labels === 'string' ? JSON.parse(card.labels) : (card.labels ?? [])
+  card.attachments = await listAttachments(id)
+  return card
+}
+
+// --- Attachments ---
+export async function listAttachments(cardId: string): Promise<Attachment[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT * FROM card_attachments WHERE card_id = ? ORDER BY created_at',
+    [cardId]
+  )
+  return rows as Attachment[]
+}
+
+export async function getAttachmentsByCardIds(cardIds: string[]): Promise<Map<string, Attachment[]>> {
+  const map = new Map<string, Attachment[]>()
+  if (cardIds.length === 0) return map
+  const placeholders = cardIds.map(() => '?').join(',')
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT * FROM card_attachments WHERE card_id IN (${placeholders}) ORDER BY created_at`,
+    cardIds
+  )
+  for (const row of rows as Attachment[]) {
+    const list = map.get(row.card_id) ?? []
+    list.push(row)
+    map.set(row.card_id, list)
+  }
+  return map
+}
+
+export async function getAttachment(id: string): Promise<Attachment | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT * FROM card_attachments WHERE id = ?',
+    [id]
+  )
+  return (rows[0] as Attachment) ?? null
+}
+
+export async function createAttachment(input: {
+  card_id: string
+  filename: string
+  original_name: string | null
+  mime_type: string
+  size: number
+}): Promise<Attachment> {
+  const id = crypto.randomUUID()
+  await pool.query(
+    'INSERT INTO card_attachments (id, card_id, filename, original_name, mime_type, size) VALUES (?, ?, ?, ?, ?, ?)',
+    [id, input.card_id, input.filename, input.original_name, input.mime_type, input.size]
+  )
+  const [rows] = await pool.query<RowDataPacket[]>(
+    'SELECT * FROM card_attachments WHERE id = ?',
+    [id]
+  )
+  return rows[0] as Attachment
+}
+
+export async function deleteAttachment(id: string): Promise<Attachment | null> {
+  const existing = await getAttachment(id)
+  if (!existing) return null
+  await pool.query<ResultSetHeader>('DELETE FROM card_attachments WHERE id = ?', [id])
+  return existing
 }

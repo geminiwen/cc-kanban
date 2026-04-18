@@ -3,10 +3,13 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js'
+import { readFile } from 'fs/promises'
+import { join } from 'path'
 import { ensureDb } from '../lib/db-init'
 import * as queries from '../lib/queries'
 import { broadcast } from '../lib/ws-broadcast'
 import { Events } from '../lib/types'
+import { UPLOAD_DIR, ALLOWED_MIME } from '../lib/uploads'
 
 export function createMcpServer(): Server {
   const mcp = new Server(
@@ -34,6 +37,7 @@ export function createMcpServer(): Server {
       { name: 'move_card', description: 'Move a card to a different column and/or position', inputSchema: { type: 'object' as const, properties: { card_id: { type: 'string' }, target_column_id: { type: 'string' }, position: { type: 'number' } }, required: ['card_id', 'target_column_id', 'position'] } },
       { name: 'delete_card', description: 'Delete a card', inputSchema: { type: 'object' as const, properties: { card_id: { type: 'string' } }, required: ['card_id'] } },
       { name: 'get_board_summary', description: 'Get a text summary of a board state', inputSchema: { type: 'object' as const, properties: { board_id: { type: 'string' } }, required: ['board_id'] } },
+      { name: 'get_card', description: 'Get a card with full details including attached images inlined', inputSchema: { type: 'object' as const, properties: { card_id: { type: 'string', description: 'Card UUID' } }, required: ['card_id'] } },
     ],
   }))
 
@@ -88,6 +92,30 @@ export function createMcpServer(): Server {
           await queries.deleteCard(a.card_id as string)
           broadcast({ event: Events.CARD_DELETED, data: { id: a.card_id } })
           return ok('Card deleted')
+        }
+        case 'get_card': {
+          const card = await queries.getCard(a.card_id as string)
+          if (!card) return err('Card not found')
+          const text = [
+            `# ${card.title}`,
+            card.labels?.length ? `Labels: ${card.labels.join(', ')}` : null,
+            card.due_date ? `Due: ${new Date(card.due_date).toLocaleDateString()}` : null,
+            card.description ? `\n${card.description}` : null,
+            card.attachments?.length ? `\n${card.attachments.length} attachment(s) inlined below.` : null,
+          ].filter(Boolean).join('\n')
+          const content: Array<{ type: 'text'; text: string } | { type: 'image'; data: string; mimeType: string }> = [
+            { type: 'text', text },
+          ]
+          for (const att of card.attachments ?? []) {
+            if (!ALLOWED_MIME.has(att.mime_type)) continue
+            try {
+              const bytes = await readFile(join(UPLOAD_DIR, att.filename))
+              content.push({ type: 'image', data: bytes.toString('base64'), mimeType: att.mime_type })
+            } catch {
+              // Skip missing files rather than fail the whole call
+            }
+          }
+          return { content }
         }
         case 'get_board_summary': {
           const board = await queries.getBoard(a.board_id as string)
