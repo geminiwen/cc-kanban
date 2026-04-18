@@ -4,5 +4,5 @@ services:
     ports:
       - "3100:3000"
     environment:
-      DATABASE_URL: "mysql://geminiwen:silentlove0449!@rm-bp16794mvudl80p3o.mysql.rds.aliyuncs.com:3306/kanban"
+      DATABASE_URL: "${DATABASE_URL}"
     restart: unless-stopped

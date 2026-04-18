@@ -1,7 +1,7 @@
 import mysql from 'mysql2/promise'
 
 const pool = mysql.createPool({
-  uri: process.env.DATABASE_URL ?? 'mysql://geminiwen:silentlove0449!@rm-bp16794mvudl80p3o.mysql.rds.aliyuncs.com:3306/kanban',
+  uri: process.env.DATABASE_URL,
   waitForConnections: true,
   connectionLimit: 10,
 })
